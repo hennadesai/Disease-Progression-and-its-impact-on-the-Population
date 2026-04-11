@@ -24,10 +24,24 @@ def load_who_data():
     "Indicator":"Disease"
   })
 
-  #Clean
-  df=df.dropna(subset=["Cases","Year"])
+  df=df.dropna()
+
+  #ConvertYears properly
+  df["Year"]=pd.to_numeric(df["Year"],errors="coerce")
+
+  #keep last 100 years if available 
+  df=df[df["Year"]>=1920]
+
+  #Disease Filter
+  keywords = [
+    "cancer","diabetes","tuberculosis","hiv","malaria","cardiovascular",
+    "stroke","respiratory","influenza","hepatitis","alzheimer"
+  ]
+
+  df=df[df["Disease"].str.lower().str.contains("|".join(keywords))]    
 
   return df 
+  
 #LOAD CDC DATA 
 @st.cache_data():
 def load_cdc_data():
@@ -49,6 +63,11 @@ def load_cdc_data():
     
     df = df.dropna(subset=["Cases","Year"])
 
+    #Aggregate to yearly USA total
+    df=df.groupby("Year", as_index=False)["Cases"].sum()
+    df["Country"]="USA"
+    df["Disease"]="CDC Reported Disease"
+
   except:
     df=pd.DataFrame()
 
@@ -57,15 +76,16 @@ def load_cdc_data():
 #LOAD COUNTRY CODES
 @st.cache_data
 def load_country_codes():
-  return pd.read_csv(
-    "https://raw.githubusercontent.com/plotly/datasets/master/2014_world_gdp_with_codes.csv"
-  )[["COUNTRY","CODE"]].rename(columns={
+    url = "https://raw.githubusercontent.com/plotly/datasets/master/2014_world_gdp_with_codes.csv"
+    df= pd.read_csv(url)
+
+  df=df.rename(columns={
       "COUNTRY": "CountryName",
       "CODE": "ISO3"
   })
+  return df
 
-#LOAD GWAS DATA(REAL API)
-
+#LOAD GWAS DATA
 @st.cache_data
 def load_gwas_data():
   url = "https://www.ebi.ac.uk/gwas/rest/api/associations"
@@ -74,15 +94,10 @@ def load_gwas_data():
 
   records= []
 
-  for item in data["_embedded"]["associations"][:300]: #limit for speed
-    trait=item.get("trait","Unknown")
-    snp = item.get("variantID","Unknown")
-    pval = item.get("pvalue", None)
-
+  for item in data["_embedded"]["associations"][:400]: #limit for speed
     records.append({
-      "Trait":trait,
-      "SNP":snp,
-      "PValue":pval
+      "Trait":item.get("trait","").lower(),
+      "SNP":item.get("variantId","")
     })
   return pd.DataFrame(records)
 
@@ -103,7 +118,14 @@ diseases= data ["Disease"].dropna().unique()[:50]
 selected_disease=st.sidebar.multiselect(
   "Select Disease(s)", 
   diseases,
-  default=diseases[:2]
+  default=diseases[:3]
+)
+
+countries = sorted(data["Country"].unique()[:50]
+selected_countries = st.sidebar.multiselect(
+  "Selected Countries",
+  countries, 
+  default = countries [:5]
 )
 
 year_list= sorted(data["Year"].dropna(),unique())
@@ -111,15 +133,19 @@ selected_year=st.sidebar.selectbox("Select Year", year_list)
 
 mutation = st.sidebar.selectbox(
   "Select SNP (GWAS)",
-  gwas["SNP"].dropna().unique()[:100]
+  gwas["SNP"].dropna().unique()[:150]
 )
 
 #FILTER DATA 
 filtered = data[
   (data["Disease"].isin(selected_diseases))&
+  (data["Country"].isin(selected_countries))&
   (data["Year"]==selected_year)
 ]
-trend= data[data["Disease"].isin(selected_diseases)]
+trend= data[
+  (data["Disease"].isin(selected_diseases)) &
+  (data["Country"].isin(selected_countries))
+]
 
 #DISEASE TREND
 
@@ -129,6 +155,8 @@ fig= px.line(
   trend,
   x="Year",
   y="Cases",
+  color="Disease"
+  line_groups="Country"
   title="Disease Progression Over Time"
 )
 
@@ -142,8 +170,7 @@ map_df=filtered.groupby("Country", as_index=False)["Cases"].mean()
 
 map_df = map_df.merge(
   codes,
-  left_on="Country",
-  right_on="CountryName",
+  on="Country",
   how="left"
 )
 
@@ -151,6 +178,7 @@ fig_map=px.choropleth(
   map_df,
   locations="ISO3",
   color="Cases",
+  hover_name="Country",
   color_continuous_scale="Reds",
   title="Disease Prevalence by Country"
 )
@@ -186,7 +214,10 @@ if not selected_gwas.empty:
   st.warning ("High-risk regions based on disease prevalence:")
   st.write(list(regions))
 
-  st.info("Recommendation: Avoid or take precautions in these areas.")
+  st.info(
+    "Recommendation: Individuals with this mutation should"
+    "avoid or take precautions in these regions."
+  )
 
 else:
   st.write("No strong match between SNP and selected diseases.")
