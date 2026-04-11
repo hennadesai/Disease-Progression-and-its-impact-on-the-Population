@@ -79,11 +79,11 @@ def load_country_codes():
     url = "https://raw.githubusercontent.com/plotly/datasets/master/2014_world_gdp_with_codes.csv"
     df= pd.read_csv(url)
 
-  df=df.rename(columns={
-      "COUNTRY": "Country",
-      "CODE": "ISO3"
-  })
-  return df
+    df=df.rename(columns={
+        "COUNTRY": "Country",
+        "CODE": "ISO3"
+    })
+    return df
 
 #LOAD GWAS DATA
 @st.cache_data
@@ -121,14 +121,14 @@ selected_disease=st.sidebar.multiselect(
   default=diseases[:3]
 )
 
-countries = sorted(data["Country"].unique()[:50]
+countries = sorted(data["Country"].unique()[:50])
 selected_countries = st.sidebar.multiselect(
   "Selected Countries",
   countries, 
   default = countries [:5]
 )
 
-year_list= sorted(data["Year"].dropna(),unique())
+year_list= sorted(data["Year"].dropna().unique())
 selected_year=st.sidebar.selectbox("Select Year", year_list)
 
 mutation = st.sidebar.selectbox(
@@ -155,8 +155,8 @@ fig= px.line(
   trend,
   x="Year",
   y="Cases",
-  color="Disease"
-  line_groups="Country"
+  color="Disease",
+  line_group="Country",
   title="Disease Progression Over Time"
 )
 
@@ -188,7 +188,7 @@ st.plotly_chart(fig_map, use_container_width=True)
 #GWAS ANALYSIS
 st.subheader("GWAS-Based Risk Analysis")
 
-select_gwas= gwas[gwas["SNP"]==mutation]
+selected_gwas= gwas[gwas["SNP"]==mutation]
 
 if not selected_gwas.empty:
   trait = selected_gwas.iloc[0]["Trait"]
@@ -226,7 +226,7 @@ else:
 st.subheader("Top Countries")
 top=map_df.sort_values(by="Cases", ascending=False).head(10)
 
-fig_bar=px.bar(top,x="Country", y="cases")
+fig_bar=px.bar(top,x="Country", y="Cases")
 
 st.plotly_chart(fig_bar, use_container_width=True)
 
