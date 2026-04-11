@@ -80,7 +80,7 @@ def load_country_codes():
     df= pd.read_csv(url)
 
   df=df.rename(columns={
-      "COUNTRY": "CountryName",
+      "COUNTRY": "Country",
       "CODE": "ISO3"
   })
   return df
