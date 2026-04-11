@@ -27,37 +27,37 @@ def load_who_data():
     if "value" not in data:
       return fallback
       
-  df= pd.DataFrame(data["value"])
+    df= pd.DataFrame(data["value"])
   #keep only useful columns 
-  df = df[["SpatialDim","TimeDim","NumericValue","Indicator"]]
+    df = df[["SpatialDim","TimeDim","NumericValue","Indicator"]]
 
   #Rename
-  df = df.rename(columns={
-    "SpatialDim": "Country",
-    "TimeDim": "Year",
-    "NumericValue": "Cases",
-    "Indicator":"Disease"
-  })
+    df = df.rename(columns={
+      "SpatialDim": "Country",
+      "TimeDim": "Year",
+      "NumericValue": "Cases",
+      "Indicator":"Disease"
+    })
 
   #ConvertYears properly
-  df["Year"]=pd.to_numeric(df["Year"],errors="coerce")
-  df=df.dropna()
+    df["Year"]=pd.to_numeric(df["Year"],errors="coerce")
+    df=df.dropna()
 
   #keep last 100 years if available 
-  df=df[df["Year"]>=1920]
+    df=df[df["Year"]>=1920]
 
   #Disease Filter
-  keywords = [
-    "cancer","diabetes","tuberculosis","hiv","malaria","cardiovascular",
-    "stroke","respiratory","influenza","hepatitis","alzheimer"
-  ]
+    keywords = [
+      "cancer","diabetes","tuberculosis","hiv","malaria","cardiovascular",
+      "stroke","respiratory","influenza","hepatitis","alzheimer"
+    ]
 
-  df=df[df["Disease"].str.lower().str.contains("|".join(keywords))]    
+    df=df[df["Disease"].str.lower().str.contains("|".join(keywords))]    
 
-  return df 
+    return df 
   
-except:
-  return fallback
+  except:
+    return fallback
   
 #LOAD CDC DATA 
 @st.cache_data
@@ -113,7 +113,7 @@ def load_gwas_data():
   try:
     url = "https://www.ebi.ac.uk/gwas/rest/api/associations"
     r= requests.get(url,timeout=20)
-  data= r.json()
+    data= r.json()
 
   records= []
 
@@ -147,7 +147,7 @@ if data.empty:
 st.sidebar.header("Filters")
 
 diseases= sorted(data["Disease"].unique())
-selected_disease=st.sidebar.multiselect(
+selected_diseases=st.sidebar.multiselect(
   "Select Disease(s)", 
   diseases,
   default=diseases[:3]
@@ -247,7 +247,7 @@ if not selected_gwas.empty:
     st.write(list(regions))
 
     st.info(
-      "Recommendation: Individuals with this mutation should"
+      "Recommendation: Individuals with this mutation should "
       "avoid or take precautions in these regions."
     )
 
