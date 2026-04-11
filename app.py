@@ -115,20 +115,20 @@ def load_gwas_data():
     r= requests.get(url,timeout=20)
     data= r.json()
 
-  records= []
+    records= []
 
-  for item in data["_embedded"]["associations"][:300]: #limit for speed
-    records.append({
-      "Trait":item.get("trait","").lower(),
-      "SNP":item.get("variantId","")
+    for item in data["_embedded"]["associations"][:300]: #limit for speed
+      records.append({
+        "Trait":item.get("trait","").lower(),
+        "SNP":item.get("variantId","")
+      })
+    return pd.DataFrame(records)
+
+  except:
+    return pd.DataFrame({
+      "Trait": ["cancer","diabetes","malaria"],
+      "SNP":["rs1","rs2","rs3"]
     })
-  return pd.DataFrame(records)
-
-except:
-  return pd.DataFrame({
-    "Trait": ["cancer","diabetes","malaria"],
-    "SNP":["rs1","rs2","rs3"]
-  })
 
 #LOAD DATA
 who=load_who_data()
