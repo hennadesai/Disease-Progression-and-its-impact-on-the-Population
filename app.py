@@ -7,12 +7,27 @@ st.set_page_config(page_title="Disease Dashboard", layout="wide")
 
 st.title ("Disease and Genetic Risk Dashboard")
 
+#fallback data 
+fallback=pd.DataFrame({
+  "Country":["USA","India","Brazil","UK","Germany","China"],
+  "Year":[2000,2005,2010,2015,2020,2022],
+  "Cases":[120,300,500,700,650,900],
+  "Disease":["cancer","diabetes","malaria","hiv","tuberculosis","stroke"]
+})
+
 #load WHO data
 @st.cache_data
 def load_who_data():
   url = "https://ghoapi.azureedge.net/api/IndicatorData"
-  response= requests.get(url)
-  df= pd.DataFrame(response.json()["value"])
+
+  try:
+    r= requests.get(url,timeout=20)
+    data=r.json()
+
+    if "value" not in data:
+      return fallback
+      
+  df= pd.DataFrame(data["value"])
   #keep only useful columns 
   df = df[["SpatialDim","TimeDim","NumericValue","Indicator"]]
 
@@ -24,10 +39,9 @@ def load_who_data():
     "Indicator":"Disease"
   })
 
-  df=df.dropna()
-
   #ConvertYears properly
   df["Year"]=pd.to_numeric(df["Year"],errors="coerce")
+  df=df.dropna()
 
   #keep last 100 years if available 
   df=df[df["Year"]>=1920]
@@ -42,17 +56,25 @@ def load_who_data():
 
   return df 
   
+except:
+  return fallback
+  
 #LOAD CDC DATA 
 @st.cache_data
 def load_cdc_data():
-  url = "https://data.cdc.gov/resource/9mfq-cb36.json"
   try:
-    df = pd.read_json(url)
+    url = "https://data.cdc.gov/resource/9mfq-cb36.json"
+    r = requests.get(url, timeout=20)
+    data=r.json()
+    
+    df = pd.DataFrame(data)
+
+    if df.empty:
+      return fallback
     
     df=df.rename(columns={
       "year":"Year",
-      "data_value": "Cases",
-      "locationabbr": "Country"
+      "data_value": "Cases"
     })
 
     #Convert state abbreviations to USA label
@@ -68,10 +90,10 @@ def load_cdc_data():
     df["Country"]="USA"
     df["Disease"]="CDC Reported Disease"
 
-  except:
-    df=pd.DataFrame()
+    return df
 
-  return df
+  except:
+    return fallback 
 
 #LOAD COUNTRY CODES
 @st.cache_data
@@ -88,18 +110,25 @@ def load_country_codes():
 #LOAD GWAS DATA
 @st.cache_data
 def load_gwas_data():
-  url = "https://www.ebi.ac.uk/gwas/rest/api/associations"
-  response = requests.get(url)
-  data= response.json()
+  try:
+    url = "https://www.ebi.ac.uk/gwas/rest/api/associations"
+    r= requests.get(url,timeout=20)
+  data= r.json()
 
   records= []
 
-  for item in data["_embedded"]["associations"][:400]: #limit for speed
+  for item in data["_embedded"]["associations"][:300]: #limit for speed
     records.append({
       "Trait":item.get("trait","").lower(),
       "SNP":item.get("variantId","")
     })
   return pd.DataFrame(records)
+
+except:
+  return pd.DataFrame({
+    "Trait": ["cancer","diabetes","malaria"],
+    "SNP":["rs1","rs2","rs3"]
+  })
 
 #LOAD DATA
 who=load_who_data()
@@ -110,18 +139,21 @@ gwas=load_gwas_data()
 #Combine WHO + CDC
 data = pd.concat([who,cdc],ignore_index=True)
 
+#if everything fails 
+if data.empty:
+  data= fallback
+
 #sidebar filters
 st.sidebar.header("Filters")
 
-diseases= data ["Disease"].dropna().unique()[:50]
-
+diseases= sorted(data["Disease"].unique())
 selected_disease=st.sidebar.multiselect(
   "Select Disease(s)", 
   diseases,
   default=diseases[:3]
 )
 
-countries = sorted(data["Country"].unique()[:50])
+countries = sorted(data["Country"].unique())
 selected_countries = st.sidebar.multiselect(
   "Selected Countries",
   countries, 
@@ -133,7 +165,7 @@ selected_year=st.sidebar.selectbox("Select Year", year_list)
 
 mutation = st.sidebar.selectbox(
   "Select SNP (GWAS)",
-  gwas["SNP"].dropna().unique()[:150]
+  gwas["SNP"].dropna().unique()[:100]
 )
 
 #FILTER DATA 
@@ -201,26 +233,26 @@ if not selected_gwas.empty:
   if matched:
     st.success(f"Matched Disease(s): {matched}")
 
-  risk_data = data[
-    (data["Disease"].isin(matched)) &
-    (data["Year"]== selected_year)
-  ]
+    risk_data = data[
+      (data["Disease"].isin(matched)) &
+      (data["Year"]== selected_year)
+    ]
 
-  high_risk = risk_data[
-    risk_data["Cases"] > risk_data["Cases"].quantile(0.75)
-  ]
-  regions = high_risk["Country"].unique()
+    high_risk = risk_data[
+      risk_data["Cases"] > risk_data["Cases"].quantile(0.75)
+    ]
+    regions = high_risk["Country"].unique()
   
-  st.warning ("High-risk regions based on disease prevalence:")
-  st.write(list(regions))
+    st.warning ("High-risk regions based on disease prevalence:")
+    st.write(list(regions))
 
-  st.info(
-    "Recommendation: Individuals with this mutation should"
-    "avoid or take precautions in these regions."
-  )
+    st.info(
+      "Recommendation: Individuals with this mutation should"
+      "avoid or take precautions in these regions."
+    )
 
-else:
-  st.write("No strong match between SNP and selected diseases.")
+  else:
+    st.write("No strong match between SNP and selected diseases.")
 
 #BAR CHART
 st.subheader("Top Countries")
