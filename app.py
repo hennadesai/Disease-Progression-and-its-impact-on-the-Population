@@ -43,7 +43,7 @@ def load_who_data():
   return df 
   
 #LOAD CDC DATA 
-@st.cache_data():
+@st.cache_data
 def load_cdc_data():
   url = "https://data.cdc.gov/resource/9mfq-cb36.json"
   try:
