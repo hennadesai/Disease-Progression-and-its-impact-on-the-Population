@@ -1,7 +1,6 @@
 import streamlit as st 
 import pandas as pd 
 import plotly.express as px
-import requests
 
 st.set_page_config(page_title="Disease Dashboard", layout="wide")
 
@@ -12,30 +11,21 @@ fallback=pd.DataFrame({
   "Country":["USA","India","Brazil","UK","Germany","China"],
   "Year":[2000,2005,2010,2015,2020,2022],
   "Cases":[120,300,500,700,650,900],
-  "Disease":["cancer","diabetes","malaria","hiv","tuberculosis","stroke"]
+  "Disease":["cancer","diabetes","tuberculosis","hiv","malaria","cardiovascular",
+      "stroke","respiratory","influenza","hepatitis","alzheimer"]
 })
 
 #load WHO data
 @st.cache_data
 def load_who_data():
-  url = "https://ghoapi.azureedge.net/api/IndicatorData"
-
   try:
-    r= requests.get(url,timeout=20)
-    data=r.json()
-
-    if "value" not in data:
-      return fallback
-      
-    df= pd.DataFrame(data["value"])
-  #keep only useful columns 
-    df = df[["SpatialDim","TimeDim","NumericValue","Indicator"]]
+    df = pd.read_csv("data/who.csv.csv.xlsv")
 
   #Rename
     df = df.rename(columns={
-      "SpatialDim": "Country",
-      "TimeDim": "Year",
-      "NumericValue": "Cases",
+      "Country": "Country",
+      "Year": "Year",
+      "Value": "Cases",
       "Indicator":"Disease"
     })
 
@@ -43,34 +33,18 @@ def load_who_data():
     df["Year"]=pd.to_numeric(df["Year"],errors="coerce")
     df=df.dropna()
 
-  #keep last 100 years if available 
-    df=df[df["Year"]>=1920]
-
-  #Disease Filter
-    keywords = [
-      "cancer","diabetes","tuberculosis","hiv","malaria","cardiovascular",
-      "stroke","respiratory","influenza","hepatitis","alzheimer"
-    ]
-
-    df=df[df["Disease"].str.lower().str.contains("|".join(keywords))]    
-
     return df 
-  
-  except:
-    return fallback
+    
+except Exception as e:
+  st.write("WHO ERROR:",e)
+  return fallback 
+
   
 #LOAD CDC DATA 
 @st.cache_data
 def load_cdc_data():
   try:
-    url = "https://data.cdc.gov/resource/9mfq-cb36.json"
-    r = requests.get(url, timeout=20)
-    data=r.json()
-    
-    df = pd.DataFrame(data)
-
-    if df.empty:
-      return fallback
+    df = pd.read_csv("data/cdc.csv.csv.xlsv")
     
     df=df.rename(columns={
       "year":"Year",
@@ -83,7 +57,7 @@ def load_cdc_data():
     #Add disease label (CDC dataset is usually one disease)
     df["Disease"] = "CDC Reported Disease"
     
-    df = df.dropna(subset=["Cases","Year"])
+    df = df.dropna()
 
     #Aggregate to yearly USA total
     df=df.groupby("Year", as_index=False)["Cases"].sum()
@@ -93,7 +67,7 @@ def load_cdc_data():
     return df
 
   except:
-    return fallback 
+    return pd.DataFrame() 
 
 #LOAD COUNTRY CODES
 @st.cache_data
@@ -111,20 +85,14 @@ def load_country_codes():
 @st.cache_data
 def load_gwas_data():
   try:
-    url = "https://www.ebi.ac.uk/gwas/rest/api/associations"
-    r= requests.get(url,timeout=20)
-    data= r.json()
+    df = pd.read_csv("data/gwas.csv")
 
-    records= []
+    df["Trait"]=df["Trait"].str.lower()
 
-    for item in data["_embedded"]["associations"][:300]: #limit for speed
-      records.append({
-        "Trait":item.get("trait","").lower(),
-        "SNP":item.get("variantId","")
-      })
-    return pd.DataFrame(records)
+    return df
 
-  except:
+  except Exception as e:
+    st.write("GWAS ERROR:",e)
     return pd.DataFrame({
       "Trait": ["cancer","diabetes","malaria"],
       "SNP":["rs1","rs2","rs3"]
@@ -143,10 +111,15 @@ data = pd.concat([who,cdc],ignore_index=True)
 if data.empty:
   data= fallback
 
+#DEBUG(REMOVE LATER) 
+st.write("WHO DATA SAMPLE", who.head())
+st.write("GWAS DATA SAMPLE",gwas.head())
+
 #sidebar filters
 st.sidebar.header("Filters")
 
 diseases= sorted(data["Disease"].unique())
+
 selected_diseases=st.sidebar.multiselect(
   "Select Disease(s)", 
   diseases,
@@ -165,7 +138,7 @@ selected_year=st.sidebar.selectbox("Select Year", year_list)
 
 mutation = st.sidebar.selectbox(
   "Select SNP (GWAS)",
-  gwas["SNP"].dropna().unique()[:100]
+  gwas["SNP"].dropna().unique()
 )
 
 #FILTER DATA 
