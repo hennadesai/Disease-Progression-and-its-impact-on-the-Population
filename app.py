@@ -39,9 +39,9 @@ def load_who_data():
 
     return df 
     
-except Exception as e:
-  st.write("WHO ERROR:", e)
-  return fallback 
+  except Exception as e:
+    st.write("WHO ERROR:", e)
+    return fallback 
 
   
 #LOAD CDC DATA 
