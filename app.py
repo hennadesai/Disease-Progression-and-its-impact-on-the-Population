@@ -11,22 +11,26 @@ fallback=pd.DataFrame({
   "Country":["USA","India","Brazil","UK","Germany","China"],
   "Year":[2000,2005,2010,2015,2020,2022],
   "Cases":[120,300,500,700,650,900],
-  "Disease":["cancer","diabetes","tuberculosis","hiv","malaria","cardiovascular",
-      "stroke","respiratory","influenza","hepatitis","alzheimer"]
+  "Disease":["cancer","diabetes","tuberculosis","hiv","malaria","cardiovascular"]
 })
 
 #load WHO data
 @st.cache_data
 def load_who_data():
   try:
-    df = pd.read_csv("data/who.csv.csv.xlsv")
+    df = pd.read_csv("data/who.csv")
 
-  #Rename
+    #Debug: see columns
+    st.write("WHO columns:", df.columns)
+
+    #Rename
     df = df.rename(columns={
       "Country": "Country",
       "Year": "Year",
       "Value": "Cases",
-      "Indicator":"Disease"
+      "Indicator":"Disease",
+      "IndicatorName": "Disease",
+      "NumericValue": "Cases"
     })
 
   #ConvertYears properly
@@ -36,7 +40,7 @@ def load_who_data():
     return df 
     
 except Exception as e:
-  st.write("WHO ERROR:",e)
+  st.write("WHO ERROR:", e)
   return fallback 
 
   
@@ -44,11 +48,16 @@ except Exception as e:
 @st.cache_data
 def load_cdc_data():
   try:
-    df = pd.read_csv("data/cdc.csv.csv.xlsv")
+    df = pd.read_csv("data/cdc.csv")
+
+    #Debug
+    st.write("CDC columns:", df.columns)
     
     df=df.rename(columns={
       "year":"Year",
-      "data_value": "Cases"
+      "Year": "Year",
+      "data_value": "Cases",
+      "DataValue": "Cases"
     })
 
     #Convert state abbreviations to USA label
@@ -66,7 +75,8 @@ def load_cdc_data():
 
     return df
 
-  except:
+  except Exception as e:
+    st.write("CDC ERROR:", e)
     return pd.DataFrame() 
 
 #LOAD COUNTRY CODES
@@ -92,10 +102,10 @@ def load_gwas_data():
     return df
 
   except Exception as e:
-    st.write("GWAS ERROR:",e)
+    st.write("GWAS ERROR:", e)
     return pd.DataFrame({
-      "Trait": ["cancer","diabetes","malaria"],
-      "SNP":["rs1","rs2","rs3"]
+      "Trait": ["cancer","diabetes"],
+      "SNP":["rs1","rs2"]
     })
 
 #LOAD DATA
