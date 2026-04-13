@@ -30,7 +30,7 @@ def load_who_data():
     df = df.rename(columns={
       "Location": "Country",
       "ParentLocation":"Continent",
-      "Period": "Year",
+      "Year": "Year",
       "ValueType": "Cases",
       "Indicator":"Disease",
       "IndicatorCode": "Disease",
