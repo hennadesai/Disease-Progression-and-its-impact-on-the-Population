@@ -53,7 +53,7 @@ def load_who_data():
 @st.cache_data
 def load_cdc_data():
   try:
-    df = pd.read_excel("cdc.csv.xlsx", encoding="openpyxl")
+    df = pd.read_excel("cdc.xlsx", encoding="openpyxl")
 
     #Debug
     st.write("CDC columns:", df.columns)
