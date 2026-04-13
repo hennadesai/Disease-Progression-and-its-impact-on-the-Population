@@ -38,11 +38,6 @@ def load_who_data():
       "value" : "Value"
     })
 
-  #ConvertYears properly
-    if "period" not in df.columns:
-      st.error("Year column not found in WHO data")
-      return fallback 
-      
     df["period"]=pd.to_numeric(df["period"],errors="coerce")
     df=df.dropna()
 
