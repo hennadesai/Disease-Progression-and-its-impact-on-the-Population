@@ -21,16 +21,16 @@ def load_who_data():
     df = pd.read_excel("who.xlsx")
 
     #Normalize column names
-    df.columns = df.columns.str.strip()
+    df.columns = df.columns.str.strip().str.lower()
 
     #Debug: see columns
-    st.write("WHO columns:", df.columns)
+    st.write("WHO columns:", df.columns.tolist())
 
     #Rename
     df = df.rename(columns={
       "Location": "Country",
       "ParentLocation":"Continent",
-      "Year": "Year",
+      "Period": "Year",
       "ValueType": "Cases",
       "Indicator":"Disease",
       "IndicatorCode": "Disease",
@@ -39,6 +39,10 @@ def load_who_data():
     })
 
   #ConvertYears properly
+    if "Year" not in df.columns:
+      st.error("Year column not found in WHO data")
+      return fallback 
+      
     df["Year"]=pd.to_numeric(df["Year"],errors="coerce")
     df=df.dropna()
 
@@ -53,7 +57,7 @@ def load_who_data():
 @st.cache_data
 def load_cdc_data():
   try:
-    df = pd.read_excel("cdc.xlsx")
+    df = pd.read_excel("cdc.xlsx", engine="openpyxl")
 
     #Debug
     st.write("CDC columns:", df.columns)
