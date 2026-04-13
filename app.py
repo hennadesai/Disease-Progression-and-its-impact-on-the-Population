@@ -18,7 +18,7 @@ fallback=pd.DataFrame({
 @st.cache_data
 def load_who_data():
   try:
-    df = pd.read_excel("data/who.xlsx")
+    df = pd.read_excel("who.xlsx")
 
     #Debug: see columns
     st.write("WHO columns:", df.columns)
@@ -48,7 +48,7 @@ def load_who_data():
 @st.cache_data
 def load_cdc_data():
   try:
-    df = pd.read_excel("data/cdc.xlsx")
+    df = pd.read_excel("cdc.xlsx")
 
     #Debug
     st.write("CDC columns:", df.columns)
