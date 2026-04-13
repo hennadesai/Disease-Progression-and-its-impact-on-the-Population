@@ -60,8 +60,9 @@ def load_cdc_data():
     
     df=df.rename(columns={
       "YearEnd": "Year",
-      "DataValue": "Cases",
-      "Disease":"Disease"
+      "LocationDesc": "Country",
+      "DataValueAlt":"Cases",
+      "Topic":"Disease"
     })
 
     #Convert state abbreviations to USA label
