@@ -59,7 +59,6 @@ def load_cdc_data():
     st.write("CDC columns:", df.columns)
     
     df=df.rename(columns={
-      "YearStart":"Year",
       "YearEnd": "Year",
       "data_value": "Cases",
       "DataValue": "Cases",
