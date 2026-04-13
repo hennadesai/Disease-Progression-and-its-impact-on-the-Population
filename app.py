@@ -31,14 +31,15 @@ def load_who_data():
       "location": "Country",
       "parentlocation":"Continent",
       "period": "Year",
-      "valuetype": "Cases",
       "indicator":"Disease",
-      "indicatorcode": "Disease",
       "factvalue": "Cases",
-      "value" : "Value"
     })
 
     df["Year"] = pd.to_numeric(df["Year"], errors="coerce")
+    df["Cases"]=pd.to_numeric(df["Cases"],errors="coerce")
+
+    df= df[["Country","Year","Cases","Diseases"]]
+    
     df=df.dropna()
     
     return df 
