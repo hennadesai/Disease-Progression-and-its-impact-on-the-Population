@@ -56,11 +56,10 @@ def load_cdc_data():
     df = pd.read_excel("cdc.csv.xlsx")
 
     #Debug
-    st.write("CDC columns:", df.columns)
+    st.write("CDC columns:", df.columns.tolist())
     
     df=df.rename(columns={
       "YearEnd": "Year",
-      "data_value": "Cases",
       "DataValue": "Cases",
       "Disease":"Disease"
     })
@@ -70,11 +69,15 @@ def load_cdc_data():
 
     #Add disease label (CDC dataset is usually one disease)
     df["Disease"] = "CDC Reported Disease"
+
+    df["Year"]= pd.to_numeric(df["Year"], errors="coerce")
+    df["Cases"]=pd.to_numeric(df["Cases"], errors="coerce")
     
-    df = df.dropna()
+    df = df.dropna(subset=["Year","Cases"])
 
     #Aggregate to yearly USA total
     df=df.groupby("Year", as_index=False)["Cases"].sum()
+    
     df["Country"]="USA"
     df["Disease"]="CDC Reported Disease"
 
