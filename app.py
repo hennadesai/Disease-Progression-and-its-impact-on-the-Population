@@ -38,6 +38,9 @@ def load_who_data():
       "value" : "Value"
     })
 
+    df["Year"] = pd.to_numeric(df["Year"], errors="coerce")
+    df=df.dropna()
+    
     return df 
     
   except Exception as e:
