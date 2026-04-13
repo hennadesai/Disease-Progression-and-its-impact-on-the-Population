@@ -20,17 +20,22 @@ def load_who_data():
   try:
     df = pd.read_excel("who.xlsx")
 
+    #Normalize column names
+    df.columns = df.columns.str.strip()
+
     #Debug: see columns
     st.write("WHO columns:", df.columns)
 
     #Rename
     df = df.rename(columns={
-      "Country": "Country",
+      "Location": "Country",
+      "ParentLocation":"Continent",
       "Year": "Year",
-      "Value": "Cases",
+      "ValueType": "Cases",
       "Indicator":"Disease",
-      "IndicatorName": "Disease",
-      "NumericValue": "Cases"
+      "IndicatorCode": "Disease",
+      "FactValue": "Cases",
+      "Value" : "Value"
     })
 
   #ConvertYears properly
@@ -54,10 +59,11 @@ def load_cdc_data():
     st.write("CDC columns:", df.columns)
     
     df=df.rename(columns={
-      "year":"Year",
-      "Year": "Year",
+      "YearStart":"Year",
+      "YearEnd": "Year",
       "data_value": "Cases",
-      "DataValue": "Cases"
+      "DataValue": "Cases",
+      "Disease":"Disease"
     })
 
     #Convert state abbreviations to USA label
