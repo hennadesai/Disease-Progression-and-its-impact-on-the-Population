@@ -51,8 +51,11 @@ def load_who_data():
   
 #LOAD CDC DATA 
 @st.cache_data
+import os
 def load_cdc_data():
   try:
+    st.write("FILES:", os.listdir())
+    
     df = pd.read_excel("cdc.xlsx")
 
     #Debug
