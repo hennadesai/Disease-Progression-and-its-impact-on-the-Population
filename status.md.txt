@@ -1,0 +1,29 @@
+# Status Report
+
+#### Your name
+
+Henna Desai 
+
+#### Your section leader's name
+
+Section 007: TA: Bao Huynh
+
+#### Project title
+
+Disease Progression and its impact on the Population 
+
+***
+
+Short answers for the below questions suffice. If you want to alter your plan for your project (and obtain approval for the same), be sure to email your section leader directly!
+
+#### What have you done for your project so far?
+
+I downloaded all the files that I was supposed to obtain data from and started my code with those files so that my website could portray the progression of the disease and relate with the various SNPs that humans around the world have. 
+
+#### What have you not done for your project yet?
+
+I have not made my video explaining my project yet. 
+
+#### What problems, if any, have you encountered?
+
+I encountered problems of uploading the right kind of excel file on GitHub. This problem was faced with both the size of the file and the data that I wanted to include and exclude. The CDC file was the hardest out of all. But after several trial errors, I was able to portray the right information and have the files be accepted by the website. 
