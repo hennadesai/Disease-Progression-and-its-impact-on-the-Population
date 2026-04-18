@@ -179,7 +179,8 @@ fig= px.line(
   trend,
   x="Year",
   y="Cases",
-  color="Disease",
+  color="Country",
+  facet_col="Disease",
   line_group="Country",
   title="Disease Progression Over Time"
 )
