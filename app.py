@@ -199,7 +199,7 @@ map_df["Country"] = map_df["Country"].replace({
   "Iran (Islamic Republic of)": "Iran",
   "Republic of Korea": "South Korea",
   "Democratic Republic of the Congo": "Congo, Dem. Rep.",
-  "United Kingdom of Great Britain and Northern Ireland": "United Kingdom
+  "United Kingdom of Great Britain and Northern Ireland": "United Kingdom"
 })
 
 map_df = map_df.merge(
