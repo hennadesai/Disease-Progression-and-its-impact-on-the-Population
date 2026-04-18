@@ -170,7 +170,24 @@ trend= data[
   (data["Disease"].isin(selected_diseases)) &
   (data["Country"].isin(selected_countries))
 ]
+#WHO + CDC separate filtered views
+who_filtered = who[
+(who["Disease"].isin(selected_diseases))&
+(who["Country"].isin(selected_countries))&
+(who["Year"]==selected_year)
+]
 
+cdc_filtered = cdc[
+(cdc["Disease"].isin(selected_diseases))&
+(cdc["Year"]==selected_year)
+]
+
+#table View
+st.subheader("WHO Data (filtered)")
+st.dataframe(who_filtered)
+
+st.subheader("CDC Data (filtered)")
+st.dataframe(cdc_filtered)
 #DISEASE TREND
 
 st.subheader("Disease Progression")
