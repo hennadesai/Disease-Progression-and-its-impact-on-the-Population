@@ -192,11 +192,23 @@ st.subheader("Global Disease Map")
 
 map_df=filtered.groupby("Country", as_index=False)["Cases"].mean()
 
+map_df["Country"] = map_df["Country"].replace({
+  "United States of America": "United States",
+  "Russian Federation": "Russia",
+  "Viet Nam": "Vietnam",
+  "Iran (Islamic Republic of)": "Iran",
+  "Republic of Korea": "South Korea",
+  "Democratic Republic of the Congo": "Congo, Dem. Rep.",
+  "United Kingdom of Great Britain and Northern Ireland": "United Kingdom
+})
+
 map_df = map_df.merge(
   codes,
   on="Country",
   how="left"
 )
+
+map_df = map_df.dropna(subset=["ISO3"])
 
 fig_map=px.choropleth(
   map_df,
